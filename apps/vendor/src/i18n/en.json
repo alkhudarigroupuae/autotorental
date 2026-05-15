@@ -1,0 +1,52 @@
+{
+  "vehicles": {
+    "title": "Vehicles",
+    "description": "Manage your fleet",
+    "add": "Add Vehicle",
+    "edit": "Edit Vehicle",
+    "delete": "Delete Vehicle",
+    "noRecords": "No vehicles yet",
+    "noRecordsMessage": "You haven't added any vehicles yet. Add your first vehicle.",
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "unpublished": "Unpublished"
+    },
+    "fields": {
+      "make": "Make",
+      "model": "Model",
+      "year": "Year",
+      "transmission": "Transmission",
+      "fuelType": "Fuel Type",
+      "seats": "Seats",
+      "doors": "Doors",
+      "color": "Color",
+      "plateNumber": "Plate Number",
+      "vin": "VIN",
+      "city": "City",
+      "description": "Description"
+    },
+    "pricing": {
+      "title": "Pricing",
+      "daily": "Daily Rate",
+      "weekly": "Weekly Rate",
+      "monthly": "Monthly Rate",
+      "weeklyMileage": "Weekly Mileage Limit",
+      "monthlyMileage": "Monthly Mileage Limit",
+      "extraKm": "Extra KM Charge"
+    },
+    "terms": {
+      "title": "Terms",
+      "minAge": "Min Driver Age",
+      "deposit": "Security Deposit",
+      "zeroDeposit": "Zero Deposit",
+      "insurance": "Insurance",
+      "fuelPolicy": "Fuel Policy",
+      "minDays": "Min Rental Days",
+      "delivery": "Delivery Available",
+      "deliveryFee": "Delivery Fee",
+      "additionalDriverFee": "Additional Driver Fee",
+      "childSeatFee": "Child Seat Fee"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#E2E8F0"/>
+  <rect x="50" y="85" width="300" height="130" rx="30" fill="#2563EB" opacity="0.3"/>
+  <circle cx="110" cy="230" r="40" fill="#2563EB" opacity="0.5"/>
+  <circle cx="290" cy="230" r="40" fill="#2563EB" opacity="0.5"/>
+  <rect x="100" y="110" width="50" height="30" rx="8" fill="#1D4ED8" opacity="0.4"/>
+  <rect x="180" y="110" width="40" height="20" rx="6" fill="#1D4ED8" opacity="0.4"/>
+  <text x="200" y="200" text-anchor="middle" fill="#2563EB" font-size="14" font-family="sans-serif">Mercedes-Benz</text>
+</svg>
