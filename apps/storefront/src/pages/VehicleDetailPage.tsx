@@ -1,29 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { fetchVehicle, type Vehicle } from '@/lib/api'
-import QuoteCalculator from '@/components/QuoteCalculator'
+import { fetchVehicle } from '@/lib/api'
+import type { Vehicle } from '@/lib/api'
 import LoadingSpinner from '@/components/LoadingSpinner'
-
-const transmissionLabels: Record<string, string> = {
-  automatic: 'Automatic',
-  manual: 'Manual',
-}
-
-const fuelLabels: Record<string, string> = {
-  petrol: 'Petrol',
-  diesel: 'Diesel',
-  hybrid: 'Hybrid',
-  electric: 'Electric',
-}
-
-const categoryLabels: Record<string, string> = {
-  sedan: 'Sedan',
-  suv: 'SUV',
-  sports: 'Sports',
-  luxury: 'Luxury',
-  truck: 'Truck',
-  van: 'Van',
-}
+import { 
+  Phone, 
+  MessageCircle, 
+  MapPin, 
+  Calendar,
+  Gauge,
+  Fuel,
+  Users,
+  DoorOpen,
+  Briefcase,
+  Check,
+  ChevronLeft,
+  Share2,
+  Heart,
+  Clock,
+  Shield,
+  Star,
+  ImageIcon
+} from 'lucide-react'
 
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -32,255 +30,404 @@ export default function VehicleDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [selectedImage, setSelectedImage] = useState(0)
-  const [activeTab, setActiveTab] = useState<'specs' | 'features' | 'terms'>('specs')
+  const [activeTab, setActiveTab] = useState<'overview' | 'features' | 'terms'>('overview')
 
   useEffect(() => {
-    if (id) loadVehicle()
+    if (id) {
+      loadVehicle()
+    }
   }, [id])
 
   const loadVehicle = async () => {
-    if (!id) return
-    setLoading(true)
     try {
-      const result = await fetchVehicle(id)
-      setVehicle(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load vehicle details')
+      const data = await fetchVehicle(id!)
+      setVehicle(data)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load vehicle')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleBook = (pickupDate: string, returnDate: string) => {
-    if (!id) return
-    navigate(`/book/${id}?pickup=${pickupDate}&return=${returnDate}`)
-  }
-
-  if (loading) return <LoadingSpinner />
-  if (error) {
+  if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <p className="text-red-500 text-xl mb-4">{error}</p>
-        <button onClick={() => navigate('/vehicles')} className="btn-outline">
-          Back to Vehicles
-        </button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner />
       </div>
     )
   }
-  if (!vehicle) return null
 
-  const images = vehicle.images?.length > 0 ? vehicle.images : [{ id: '0', url: '/placeholder-car.svg', isPrimary: true }]
-
-  const groupedFeatures: Record<string, { id: string; name: string }[]> = {}
-  vehicle.features?.forEach((f) => {
-    if (!groupedFeatures[f.category]) groupedFeatures[f.category] = []
-    groupedFeatures[f.category].push(f)
-  })
-
-  const categoryColors: Record<string, string> = {
-    safety: 'bg-green-100 text-green-800',
-    comfort: 'bg-blue-100 text-blue-800',
-    technology: 'bg-purple-100 text-purple-800',
-    tech: 'bg-purple-100 text-purple-800',
-    audio: 'bg-yellow-100 text-yellow-800',
-    exterior: 'bg-orange-100 text-orange-800',
-    interior: 'bg-pink-100 text-pink-800',
-    other: 'bg-gray-100 text-gray-700',
+  if (error || !vehicle) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-2">{error || 'Vehicle not found'}</p>
+          <button
+            onClick={() => navigate('/vehicles')}
+            className="text-primary hover:underline"
+          >
+            Back to listings
+          </button>
+        </div>
+      </div>
+    )
   }
 
-  const categoryLabelsGroup: Record<string, string> = {
-    safety: 'Safety',
-    comfort: 'Comfort',
-    technology: 'Technology',
-    tech: 'Technology',
-    audio: 'Audio',
-    exterior: 'Exterior',
-    interior: 'Interior',
-    other: 'Other',
-  }
+  const images = vehicle.images?.length > 0 
+    ? vehicle.images 
+    : [{ url: '', isPrimary: true }]
+
+  const mainImage = images[selectedImage]?.url || images[0]?.url
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-blue transition-colors mb-6 flex items-center gap-1">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back
-      </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container-custom py-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center text-gray-600 hover:text-primary transition-colors text-sm"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back to results
+          </button>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-          <div className="mb-4">
-            <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-gray-100">
-              <img
-                src={images[selectedImage]?.url}
-                alt={`${vehicle.make} ${vehicle.model}`}
-                className="w-full h-full object-cover"
-              />
-              {!vehicle.available && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">Unavailable</span>
+      <div className="container-custom py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Images & Details */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Image Gallery */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              {/* Main Image */}
+              <div className="relative aspect-[16/10] bg-gray-100">
+                {mainImage ? (
+                  <img
+                    src={mainImage}
+                    alt={`${vehicle.make} ${vehicle.model}`}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-2" />
+                      <span className="text-gray-400">No image available</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Badges */}
+                <div className="absolute top-4 left-4 flex gap-2">
+                  <span className="badge-primary">{vehicle.category || 'Car'}</span>
+                  {vehicle.available && (
+                    <span className="badge bg-green-100 text-green-800">Available</span>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <button className="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors">
+                    <Share2 className="w-5 h-5 text-gray-600" />
+                  </button>
+                  <button className="w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 transition-colors">
+                    <Heart className="w-5 h-5 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Thumbnails */}
+              {images.length > 1 && (
+                <div className="p-4 border-t border-gray-200">
+                  <div className="flex gap-2 overflow-x-auto">
+                    {images.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-colors ${
+                          selectedImage === index 
+                            ? 'border-primary' 
+                            : 'border-transparent hover:border-gray-300'
+                        }`}
+                      >
+                        <img
+                          src={img.url}
+                          alt={`View ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-            {images.length > 1 && (
-              <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-                {images.map((img, idx) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setSelectedImage(idx)}
-                    className={`w-20 h-16 rounded-lg overflow-hidden shrink-0 border-2 transition-colors ${
-                      idx === selectedImage ? 'border-blue' : 'border-transparent'
-                    }`}
-                  >
-                    <img src={img.url} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
 
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-dark">
-                {vehicle.make} {vehicle.model}
-              </h1>
-              <p className="text-gray-500 mt-1">
-                {vehicle.year} | {categoryLabels[vehicle.category] || vehicle.category} | {vehicle.city}
-              </p>
-            </div>
-            <div className="text-left">
-              <div className="text-blue font-bold text-3xl">{vehicle.dailyRate.toLocaleString('en-AE')}</div>
-              <div className="text-gray-500 text-sm">AED / day</div>
-            </div>
-          </div>
-
-          <div className="tabs flex gap-1 bg-gray-100 rounded-lg p-1 mb-6">
-              {(['specs', 'features', 'terms'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-all ${
-                    activeTab === tab ? 'bg-white shadow-sm text-dark' : 'text-gray-500 hover:text-dark'
-                  }`}
-                >
-                  {tab === 'specs' ? 'Specs' : tab === 'features' ? 'Features' : 'Terms'}
-                </button>
-            ))}
-          </div>
-
-          <div>
-            {activeTab === 'specs' && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {[
-                  { label: 'Transmission', value: transmissionLabels[vehicle.transmission] || vehicle.transmission },
-                  { label: 'Fuel Type', value: fuelLabels[vehicle.fuelType] || vehicle.fuelType },
-                  { label: 'Seats', value: `${vehicle.seats} seats` },
-                  { label: 'Doors', value: `${vehicle.doors} doors` },
-                  { label: 'Color', value: vehicle.color },
-                  { label: 'Plate', value: vehicle.plateNumber },
-                ].map((spec) => (
-                  <div key={spec.label} className="bg-gray-50 rounded-lg p-4">
-                    <div className="text-gray-500 text-sm">{spec.label}</div>
-                    <div className="font-semibold text-dark mt-1">{spec.value}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {activeTab === 'features' && (
-              <div className="space-y-4">
-                {Object.entries(groupedFeatures).length === 0 ? (
-                  <p className="text-gray-500">No features specified</p>
-                ) : (
-                  Object.entries(groupedFeatures).map(([category, features]) => (
-                    <div key={category}>
-                      <h4 className="font-semibold text-dark mb-2">{categoryLabelsGroup[category] || category}</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {features.map((f) => (
-                          <span
-                            key={f.id}
-                            className={`badge ${categoryColors[category] || 'bg-gray-100 text-gray-700'}`}
-                          >
-                            {f.name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-
-            {activeTab === 'terms' && (
-              <div className="space-y-4">
-                {vehicle.terms && (
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-gray-700 whitespace-pre-line">{vehicle.terms}</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <span className="text-gray-500 text-sm">Min. Age</span>
-                    <p className="font-semibold text-dark mt-1">{vehicle.minAge} years</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <span className="text-gray-500 text-sm">Insurance</span>
-                    <p className="font-semibold text-dark mt-1">{vehicle.insurance}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <span className="text-gray-500 text-sm">Fuel Policy</span>
-                    <p className="font-semibold text-dark mt-1">{vehicle.fuelPolicy}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <span className="text-gray-500 text-sm">Mileage Limit</span>
-                    <p className="font-semibold text-dark mt-1">{vehicle.mileageLimit}</p>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <span className="text-gray-500 text-sm">Security Deposit</span>
-                    <p className="font-semibold text-dark mt-1">{vehicle.deposit.toLocaleString('en-AE')} AED</p>
+            {/* Vehicle Info */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                    {vehicle.make} {vehicle.model}
+                  </h1>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      {vehicle.city || 'Dubai'}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {vehicle.year}
+                    </span>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-blue/5 border border-blue/20 rounded-lg p-4 text-center">
-              <div className="text-blue font-bold text-xl">{vehicle.dailyRate.toLocaleString('en-AE')}</div>
-              <div className="text-gray-600 text-sm">AED / day</div>
+              {/* Tabs */}
+              <div className="border-b border-gray-200 mb-6">
+                <div className="flex gap-6">
+                  {(['overview', 'features', 'terms'] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`pb-3 text-sm font-medium capitalize border-b-2 transition-colors ${
+                        activeTab === tab
+                          ? 'border-primary text-primary'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tab Content */}
+              {activeTab === 'overview' && (
+                <div className="space-y-6">
+                  {/* Specs Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Gauge className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Transmission</p>
+                        <p className="font-medium text-gray-900 capitalize">
+                          {vehicle.transmission}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Fuel className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Fuel Type</p>
+                        <p className="font-medium text-gray-900 capitalize">
+                          {vehicle.fuelType}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Users className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Seats</p>
+                        <p className="font-medium text-gray-900">
+                          {vehicle.seats} Passengers
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <DoorOpen className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Doors</p>
+                        <p className="font-medium text-gray-900">
+                          {vehicle.doors || 4} Doors
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Briefcase className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Bags</p>
+                        <p className="font-medium text-gray-900">
+                          {vehicle.luggageCapacity || 2} Bags
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <Star className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-xs text-gray-500">Engine</p>
+                        <p className="font-medium text-gray-900">
+                          {vehicle.engine || 'Standard'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {vehicle.description && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
+                      <p className="text-gray-600 leading-relaxed">
+                        {vehicle.description}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'features' && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-4">Features & Specs</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {vehicle.features?.map((feature, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span className="text-gray-700">{feature}</span>
+                      </div>
+                    )) || (
+                      <p className="text-gray-500 col-span-2">No features listed</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'terms' && (
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Mileage Policy</h4>
+                    <p className="text-gray-600 text-sm">
+                      {vehicle.mileageLimit 
+                        ? `${vehicle.mileageLimit} km included per day. Additional km charged at ${vehicle.extraMileageCharge || 1} AED/km.`
+                        : 'Standard mileage allowance applies. Contact dealer for details.'}
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Security Deposit</h4>
+                    <p className="text-gray-600 text-sm">
+                      {vehicle.deposit > 0 
+                        ? `AED ${vehicle.deposit.toLocaleString()} security deposit required. Refundable upon safe return of the vehicle.`
+                        : 'No security deposit required.'}
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">Insurance</h4>
+                    <p className="text-gray-600 text-sm">
+                      Comprehensive insurance included. Excess/deductible may apply in case of accident.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-            {vehicle.weeklyRate > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-dark font-bold text-xl">{vehicle.weeklyRate.toLocaleString('en-AE')}</div>
-                <div className="text-gray-600 text-sm">AED / week</div>
-              </div>
-            )}
-            {vehicle.monthlyRate > 0 && (
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-dark font-bold text-xl">{vehicle.monthlyRate.toLocaleString('en-AE')}</div>
-                <div className="text-gray-600 text-sm">AED / month</div>
-              </div>
-            )}
           </div>
-        </div>
 
-        <div className="lg:col-span-1">
-          <div className="sticky top-24">
-            <QuoteCalculator
-              vehicleId={vehicle.id}
-              dailyRate={vehicle.dailyRate}
-              onBook={(quote, pickupDate, returnDate, addons) => {
-                const params = new URLSearchParams({
-                  pickup: pickupDate,
-                  return: returnDate,
-                  ...(addons?.delivery ? { delivery: '1' } : {}),
-                  ...(addons?.additionalDriver ? { additionalDriver: '1' } : {}),
-                  ...(addons?.childSeat ? { childSeat: '1' } : {}),
-                })
-                navigate(`/book/${vehicle.id}?${params.toString()}`)
-              }}
-            />
+          {/* Right Column - Pricing & Booking */}
+          <div className="space-y-6">
+            {/* Pricing Card */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6 sticky top-24">
+              <div className="mb-6">
+                <p className="text-sm text-gray-500 mb-1">Daily Rate</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-primary">
+                    AED {vehicle.dailyRate.toLocaleString()}
+                  </span>
+                  <span className="text-gray-500">/ day</span>
+                </div>
+              </div>
+
+              {/* Pricing Options */}
+              <div className="space-y-3 mb-6">
+                {vehicle.weeklyRate && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600">Weekly</span>
+                    <span className="font-semibold text-gray-900">
+                      AED {vehicle.weeklyRate.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+
+                {vehicle.monthlyRate && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-gray-600">Monthly</span>
+                    <span className="font-semibold text-gray-900">
+                      AED {vehicle.monthlyRate.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Included Features */}
+              <div className="space-y-2 mb-6">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Check className="w-4 h-4 text-green-500" />
+                  <span>Free Delivery</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Check className="w-4 h-4 text-green-500" />
+                  <span>Insurance Included</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Check className="w-4 h-4 text-green-500" />
+                  <span>24/7 Support</span>
+                </div>
+              </div>
+
+              {/* Contact Buttons */}
+              <div className="space-y-3">
+                <a
+                  href="tel:+971500000000"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-dark transition-colors"
+                >
+                  <Phone className="w-5 h-5" />
+                  Call Now
+                </a>
+                <a
+                  href="https://wa.me/971500000000"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+
+            {/* Dealer Info */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
+                  <span className="text-lg font-bold text-primary">
+                    {vehicle.dealer?.store?.name?.charAt(0) || 'A'}
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">
+                    {vehicle.dealer?.store?.name || 'AutoToRental Dealer'}
+                  </h3>
+                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                    <Shield className="w-3.5 h-3.5" />
+                    <span>Verified Dealer</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+                <Clock className="w-4 h-4" />
+                <span>Usually responds in 10 minutes</span>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500">
+                  Listed on AutoToRental. Book directly with the dealer for the best rates.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

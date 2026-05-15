@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Car, Menu, X, Phone, MapPin } from 'lucide-react'
+import { Menu, X, Phone, ChevronDown } from 'lucide-react'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -10,28 +10,26 @@ export default function Header() {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/vehicles', label: 'Rent a Car' },
-    { to: '/categories', label: 'Categories' },
-    { to: '/brands', label: 'Brands' },
   ]
 
   return (
-    <header className="bg-dark border-b border-gray-800 sticky top-0 z-50">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       {/* Top Bar */}
-      <div className="bg-dark-lighter border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-10 text-sm">
-            <div className="flex items-center space-x-4 text-gray-400">
-              <button className="flex items-center space-x-1 hover:text-white transition-colors">
-                <MapPin className="w-4 h-4" />
-                <span>{location}</span>
-              </button>
-              <span className="hidden sm:inline">|</span>
-              <span className="hidden sm:inline text-gray-500">AED / Eng</span>
+      <div className="bg-gray-50 border-b border-gray-200">
+        <div className="container-custom">
+          <div className="flex items-center justify-between h-9 text-sm">
+            <div className="flex items-center gap-4 text-gray-600">
+              <div className="flex items-center gap-1">
+                <span className="font-medium">AED</span>
+                <span className="text-gray-400">/</span>
+                <span>English</span>
+                <ChevronDown className="w-3 h-3" />
+              </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <a href="tel:+971500000000" className="flex items-center space-x-1 text-gray-400 hover:text-white transition-colors">
-                <Phone className="w-4 h-4" />
-                <span className="hidden sm:inline">+971 50 000 0000</span>
+            <div className="flex items-center gap-4">
+              <a href="tel:+971500000000" className="flex items-center gap-1.5 text-gray-600 hover:text-primary transition-colors">
+                <Phone className="w-3.5 h-3.5" />
+                <span>+971 50 000 0000</span>
               </a>
             </div>
           </div>
@@ -39,21 +37,19 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container-custom">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent-orange rounded-lg flex items-center justify-center">
-              <Car className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <span className="text-xl font-bold text-white">Auto</span>
-              <span className="text-xl font-bold gradient-text">ToRental</span>
-            </div>
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/auto-to-rental.png" 
+              alt="Auto To Rental" 
+              className="h-10 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
@@ -61,7 +57,7 @@ export default function Header() {
                 className={`text-sm font-medium transition-colors ${
                   pathname === link.to
                     ? 'text-primary'
-                    : 'text-gray-300 hover:text-white'
+                    : 'text-gray-700 hover:text-primary'
                 }`}
               >
                 {link.label}
@@ -69,8 +65,8 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* CTA Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* CTA Button */}
+          <div className="hidden md:block">
             <Link
               to="/vehicles"
               className="btn-primary text-sm"
@@ -82,7 +78,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-gray-400 hover:text-white"
+            className="md:hidden p-2 text-gray-600 hover:text-gray-900"
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -91,8 +87,8 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-dark-lighter border-t border-gray-800">
-          <div className="px-4 py-4 space-y-3">
+        <div className="md:hidden bg-white border-t border-gray-200">
+          <div className="container-custom py-4 space-y-3">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
@@ -101,7 +97,7 @@ export default function Header() {
                 className={`block py-2 text-sm font-medium ${
                   pathname === link.to
                     ? 'text-primary'
-                    : 'text-gray-300'
+                    : 'text-gray-700'
                 }`}
               >
                 {link.label}
