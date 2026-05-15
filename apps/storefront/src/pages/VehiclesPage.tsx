@@ -38,40 +38,7 @@ export default function VehiclesPage() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showFilters, setShowFilters] = useState(false)
-
-  const demoVehicle: Vehicle = {
-    id: 'demo-1',
-    make: 'Mercedes-Benz',
-    model: 'G-Class',
-    year: 2025,
-    category: 'luxury',
-    transmission: 'automatic',
-    fuelType: 'petrol',
-    seats: 5,
-    doors: 5,
-    color: 'Obsidian Black',
-    plateNumber: 'DXB 55555',
-    dailyRate: 2500,
-    weeklyRate: 15000,
-    monthlyRate: 50000,
-    deposit: 15000,
-    minAge: 28,
-    insurance: 'Full',
-    fuelPolicy: 'full_to_full',
-    mileageLimit: '500 km/week',
-    city: 'Dubai',
-    features: [],
-    images: [
-      { id: '1', url: 'https://images.unsplash.com/photo-1520031441872-265e4ff50366?w=800&q=80', isPrimary: true },
-      { id: '2', url: 'https://images.unsplash.com/photo-1606664514610-36b4f7e4f3c1?w=800&q=80', isPrimary: false },
-      { id: '3', url: 'https://images.unsplash.com/photo-1606220588913-bb3acb4d2f46?w=800&q=80', isPrimary: false },
-      { id: '4', url: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=80', isPrimary: false },
-    ],
-    terms: 'Experience unparalleled luxury with the Mercedes-Benz G-Class.',
-    available: true,
-    createdAt: '',
-    updatedAt: '',
-  }
+  const [error, setError] = useState('')
 
   const filters: VehicleFilters = {
     search: searchParams.get('search') || '',
@@ -95,13 +62,11 @@ export default function VehiclesPage() {
     setLoading(true)
     try {
       const result = await fetchVehicles(filters)
-      setVehicles([demoVehicle, ...result.data])
+      setVehicles(result.data)
       setTotalPages(result.totalPages)
-      setTotal(result.total + 1)
-    } catch {
-      setVehicles([demoVehicle])
-      setTotalPages(1)
-      setTotal(1)
+      setTotal(result.total)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load vehicles')
     } finally {
       setLoading(false)
     }
@@ -272,8 +237,17 @@ export default function VehiclesPage() {
               <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <p className="text-xl">No results found</p>
-              <p className="mt-2">Try changing your search criteria</p>
+              {error ? (
+                <>
+                  <p className="text-xl text-red-500">Error loading vehicles</p>
+                  <p className="mt-2 text-sm">{error}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xl">No results found</p>
+                  <p className="mt-2">Try changing your search criteria</p>
+                </>
+              )}
             </div>
           ) : (
             <>
