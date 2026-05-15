@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchVehicles, type Vehicle } from '@/lib/api'
+import Header from '@/components/Header'
+import Hero from '@/components/Hero'
+import CategoryCards from '@/components/CategoryCards'
 import VehicleCard from '@/components/VehicleCard'
+import Footer from '@/components/Footer'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { ChevronRight } from 'lucide-react'
 
 export default function HomePage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchText, setSearchText] = useState('')
-  const [pickupDate, setPickupDate] = useState('')
-  const [returnDate, setReturnDate] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -27,151 +29,136 @@ export default function HomePage() {
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    const params: Record<string, string> = {}
-    if (searchText) params.search = searchText
-    window.location.href = `/vehicles?${new URLSearchParams(params).toString()}`
+  const handleSearch = (searchData: {
+    location: string
+    pickupDate: string
+    returnDate: string
+  }) => {
+    const params = new URLSearchParams()
+    if (searchData.location) params.set('city', searchData.location)
+    if (searchData.pickupDate) params.set('pickupDate', searchData.pickupDate)
+    if (searchData.returnDate) params.set('returnDate', searchData.returnDate)
+    window.location.href = `/vehicles?${params.toString()}`
   }
 
-  const today = new Date().toISOString().split('T')[0]
-
   return (
-    <div>
-      <section className="relative bg-gradient-to-br from-dark via-dark-light to-dark overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-blue rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue rounded-full blur-3xl" />
-        </div>
+    <div className="min-h-screen bg-dark">
+      <Header />
+      
+      <main>
+        {/* Hero Section */}
+        <Hero onSearch={handleSearch} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
-              Your Car Starts{' '}
-              <span className="text-blue">Here</span>
-            </h1>
-            <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">
-              The best rental cars in the UAE. Choose your favorite vehicle and start your next adventure.
+        {/* Category Cards */}
+        <CategoryCards />
+
+        {/* Featured Vehicles */}
+        <section className="py-16 bg-dark">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-white">
+                Featured Rentals
+              </h2>
+              <Link
+                to="/vehicles"
+                className="flex items-center text-primary hover:text-primary-light transition-colors"
+              >
+                <span>View All Cars</span>
+                <ChevronRight className="w-5 h-5" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <LoadingSpinner />
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-red-500 mb-2">Error loading vehicles</p>
+                <p className="text-gray-500 text-sm">{error}</p>
+              </div>
+            ) : vehicles.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">No vehicles available at the moment</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {vehicles.map((vehicle) => (
+                  <VehicleCard key={vehicle.id} vehicle={vehicle} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Why Choose Us */}
+        <section className="py-16 bg-dark-lighter">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-white text-center mb-12">
+              Why Choose AutoToRental?
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Best Prices</h3>
+                <p className="text-gray-400">
+                  Book directly with dealers. No commission fees. Best rates guaranteed.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Verified Dealers</h3>
+                <p className="text-gray-400">
+                  All rental companies are verified and reviewed. Rent with confidence.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-orange/20 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-accent-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">24/7 Support</h3>
+                <p className="text-gray-400">
+                  Round-the-clock customer service. We're here when you need us.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent-orange/20" />
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Ready to Rent Your Dream Car?
+            </h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Browse our collection of luxury, sports, and economy cars. Book now and get the best deals.
             </p>
+            <Link
+              to="/vehicles"
+              className="btn-primary text-lg px-8 py-4 inline-block"
+            >
+              Browse All Cars
+            </Link>
           </div>
+        </section>
+      </main>
 
-          <form onSubmit={handleSearch} className="max-w-3xl mx-auto bg-white rounded-xl shadow-2xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Search Vehicle</label>
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Make or model..."
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Date</label>
-                <input
-                  type="date"
-                  value={pickupDate}
-                  min={today}
-                  onChange={(e) => setPickupDate(e.target.value)}
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Return Date</label>
-                <input
-                  type="date"
-                  value={returnDate}
-                  min={pickupDate || today}
-                  onChange={(e) => setReturnDate(e.target.value)}
-                  className="input-field"
-                />
-              </div>
-            </div>
-            <button type="submit" className="btn-primary w-full">
-              Search Vehicles
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-dark">Featured Vehicles</h2>
-            <p className="text-gray-500 mt-1">Choose from our latest vehicles</p>
-          </div>
-          <Link to="/vehicles" className="btn-outline text-sm hidden sm:inline-flex">
-            View All
-          </Link>
-        </div>
-
-        {loading ? (
-          <LoadingSpinner />
-        ) : vehicles.length === 0 ? (
-          <div className="text-center py-16 text-gray-500">
-            <p className="text-xl">No vehicles available at the moment</p>
-            <p className="mt-2">Please check back later</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {vehicles.map((v) => (
-              <VehicleCard key={v.id} vehicle={v} />
-            ))}
-          </div>
-        )}
-
-        <div className="text-center mt-8 sm:hidden">
-          <Link to="/vehicles" className="btn-outline">
-            View All
-          </Link>
-        </div>
-      </section>
-
-      <section className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-dark text-center mb-12">Why Choose Auto To Rental?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Reliable Cars</h3>
-              <p className="text-gray-500 text-sm">All our vehicles undergo a comprehensive inspection to ensure the highest levels of quality and safety.</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Best Prices</h3>
-              <p className="text-gray-500 text-sm">We offer competitive prices with flexible plans to suit all budgets.</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-lg mb-2">24/7 Support</h3>
-              <p className="text-gray-500 text-sm">Our support team is available 24/7 to help you whenever you need us.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <h2 className="text-3xl font-bold text-dark mb-4">Ready to Go?</h2>
-        <p className="text-gray-500 mb-8 max-w-xl mx-auto">
-          Choose your favorite vehicle today and enjoy an unforgettable driving experience.
-        </p>
-        <Link to="/vehicles" className="btn-primary text-lg px-10">
-          Browse Vehicles
-        </Link>
-      </section>
+      <Footer />
     </div>
   )
 }

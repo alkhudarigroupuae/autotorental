@@ -1,35 +1,37 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { fetchVehicles, type Vehicle, type VehicleFilters } from '@/lib/api'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 import VehicleCard from '@/components/VehicleCard'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { Search, SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 
-const categories = ['', 'sedan', 'suv', 'sports', 'luxury', 'truck', 'van']
-const categoryLabels: Record<string, string> = {
-  '': 'All',
-  sedan: 'Sedan',
-  suv: 'SUV',
-  sports: 'Sports',
-  luxury: 'Luxury',
-  truck: 'Truck',
-  van: 'Van',
-}
+const categories = [
+  { value: '', label: 'All Categories' },
+  { value: 'sedan', label: 'Sedan' },
+  { value: 'suv', label: 'SUV' },
+  { value: 'sports', label: 'Sports' },
+  { value: 'luxury', label: 'Luxury' },
+  { value: 'truck', label: 'Truck' },
+  { value: 'van', label: 'Van' },
+  { value: 'electric', label: 'Electric' },
+  { value: 'economy', label: 'Economy' },
+]
 
-const transmissions = ['', 'automatic', 'manual']
-const transmissionLabels: Record<string, string> = {
-  '': 'All',
-  automatic: 'Automatic',
-  manual: 'Manual',
-}
+const transmissions = [
+  { value: '', label: 'All' },
+  { value: 'automatic', label: 'Automatic' },
+  { value: 'manual', label: 'Manual' },
+]
 
-const fuelTypes = ['', 'petrol', 'diesel', 'hybrid', 'electric']
-const fuelLabels: Record<string, string> = {
-  '': 'All',
-  petrol: 'Petrol',
-  diesel: 'Diesel',
-  hybrid: 'Hybrid',
-  electric: 'Electric',
-}
+const fuelTypes = [
+  { value: '', label: 'All' },
+  { value: 'petrol', label: 'Petrol' },
+  { value: 'diesel', label: 'Diesel' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'electric', label: 'Electric' },
+]
 
 export default function VehiclesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -37,22 +39,21 @@ export default function VehiclesPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [showFilters, setShowFilters] = useState(false)
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [error, setError] = useState('')
 
-  const filters: VehicleFilters = {
+  const [filters, setFilters] = useState<VehicleFilters>({
     search: searchParams.get('search') || '',
     category: searchParams.get('category') || '',
     transmission: searchParams.get('transmission') || '',
     fuelType: searchParams.get('fuelType') || '',
     seatsMin: searchParams.get('seatsMin') ? Number(searchParams.get('seatsMin')) : undefined,
-    seatsMax: searchParams.get('seatsMax') ? Number(searchParams.get('seatsMax')) : undefined,
     priceMin: searchParams.get('priceMin') ? Number(searchParams.get('priceMin')) : undefined,
     priceMax: searchParams.get('priceMax') ? Number(searchParams.get('priceMax')) : undefined,
     city: searchParams.get('city') || '',
     page: searchParams.get('page') ? Number(searchParams.get('page')) : 1,
     limit: 12,
-  }
+  })
 
   useEffect(() => {
     loadVehicles()
@@ -72,226 +73,279 @@ export default function VehiclesPage() {
     }
   }
 
-  const updateFilter = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams)
-    if (value) {
-      params.set(key, value)
-    } else {
-      params.delete(key)
-    }
-    params.delete('page')
+  const updateFilter = (key: keyof VehicleFilters, value: any) => {
+    const newFilters = { ...filters, [key]: value, page: 1 }
+    setFilters(newFilters)
+    
+    const params = new URLSearchParams()
+    Object.entries(newFilters).forEach(([k, v]) => {
+      if (v !== undefined && v !== '' && v !== null) {
+        params.set(k, String(v))
+      }
+    })
     setSearchParams(params)
-  }
-
-  const goToPage = (page: number) => {
-    const params = new URLSearchParams(searchParams)
-    params.set('page', String(page))
-    setSearchParams(params)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const clearFilters = () => {
-    setSearchParams({})
+    const defaultFilters: VehicleFilters = {
+      search: '',
+      category: '',
+      transmission: '',
+      fuelType: '',
+      page: 1,
+      limit: 12,
+    }
+    setFilters(defaultFilters)
+    setSearchParams(new URLSearchParams())
   }
 
-  const hasActiveFilters = Array.from(searchParams.entries()).some(([k]) => k !== 'page')
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return
+    updateFilter('page', page)
+  }
+
+  const FilterSection = () => (
+    <div className="space-y-6">
+      {/* Search */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Search
+        </label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <input
+            type="text"
+            placeholder="Search cars..."
+            value={filters.search}
+            onChange={(e) => updateFilter('search', e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-dark border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+      </div>
+
+      {/* Category */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Category
+        </label>
+        <select
+          value={filters.category}
+          onChange={(e) => updateFilter('category', e.target.value)}
+          className="w-full px-4 py-2 bg-dark border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          {categories.map((cat) => (
+            <option key={cat.value} value={cat.value}>
+              {cat.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Transmission */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Transmission
+        </label>
+        <select
+          value={filters.transmission}
+          onChange={(e) => updateFilter('transmission', e.target.value)}
+          className="w-full px-4 py-2 bg-dark border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          {transmissions.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Fuel Type */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Fuel Type
+        </label>
+        <select
+          value={filters.fuelType}
+          onChange={(e) => updateFilter('fuelType', e.target.value)}
+          className="w-full px-4 py-2 bg-dark border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          {fuelTypes.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Price Range */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">
+          Price Range (AED/day)
+        </label>
+        <div className="flex items-center space-x-2">
+          <input
+            type="number"
+            placeholder="Min"
+            value={filters.priceMin || ''}
+            onChange={(e) => updateFilter('priceMin', e.target.value ? Number(e.target.value) : undefined)}
+            className="w-full px-3 py-2 bg-dark border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <span className="text-gray-500">-</span>
+          <input
+            type="number"
+            placeholder="Max"
+            value={filters.priceMax || ''}
+            onChange={(e) => updateFilter('priceMax', e.target.value ? Number(e.target.value) : undefined)}
+            className="w-full px-3 py-2 bg-dark border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+      </div>
+
+      {/* Clear Filters */}
+      <button
+        onClick={clearFilters}
+        className="w-full py-2 border border-gray-700 text-gray-300 rounded-lg hover:bg-dark-lighter transition-colors"
+      >
+        Clear Filters
+      </button>
+    </div>
+  )
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-dark">Vehicles</h1>
-          <p className="text-gray-500 mt-1">
-            {total} vehicles available
-          </p>
-        </div>
-        <button
-          className="lg:hidden btn-outline text-sm"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          {showFilters ? 'Hide Filters' : 'Filters'}
-        </button>
-      </div>
+    <div className="min-h-screen bg-dark">
+      <Header />
 
-      <div className="flex gap-8">
-        <aside className={`${showFilters ? 'block' : 'hidden'} lg:block w-full lg:w-72 shrink-0`}>
-          <div className="bg-gray-50 rounded-xl p-5 sticky top-24 space-y-5">
+      <main className="py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
-              <input
-                type="text"
-                value={filters.search || ''}
-                onChange={(e) => updateFilter('search', e.target.value)}
-                placeholder="Search by make or model..."
-                className="input-field"
-              />
+              <h1 className="text-3xl font-bold text-white">Rent a Car</h1>
+              <p className="text-gray-400 mt-1">
+                {total} cars available
+              </p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <select
-                value={filters.category || ''}
-                onChange={(e) => updateFilter('category', e.target.value)}
-                className="input-field"
-              >
-                {categories.map((c) => (
-                  <option key={c} value={c}>{categoryLabels[c]}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Transmission</label>
-              <select
-                value={filters.transmission || ''}
-                onChange={(e) => updateFilter('transmission', e.target.value)}
-                className="input-field"
-              >
-                {transmissions.map((t) => (
-                  <option key={t} value={t}>{transmissionLabels[t]}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fuel Type</label>
-              <select
-                value={filters.fuelType || ''}
-                onChange={(e) => updateFilter('fuelType', e.target.value)}
-                className="input-field"
-              >
-                {fuelTypes.map((f) => (
-                  <option key={f} value={f}>{fuelLabels[f]}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Seats</label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.seatsMin || ''}
-                  onChange={(e) => updateFilter('seatsMin', e.target.value)}
-                  className="input-field"
-                  min={1}
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.seatsMax || ''}
-                  onChange={(e) => updateFilter('seatsMax', e.target.value)}
-                  className="input-field"
-                  min={1}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Price (AED/day)</label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.priceMin || ''}
-                  onChange={(e) => updateFilter('priceMin', e.target.value)}
-                  className="input-field"
-                  min={0}
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.priceMax || ''}
-                  onChange={(e) => updateFilter('priceMax', e.target.value)}
-                  className="input-field"
-                  min={0}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-              <input
-                type="text"
-                value={filters.city || ''}
-                onChange={(e) => updateFilter('city', e.target.value)}
-                placeholder="Dubai, Abu Dhabi..."
-                className="input-field"
-              />
-            </div>
-
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="text-sm text-red-500 hover:text-red-700 w-full text-center">
-                Clear All Filters
-              </button>
-            )}
+            {/* Mobile Filter Button */}
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="md:hidden mt-4 btn-secondary flex items-center justify-center space-x-2"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <span>Filters</span>
+            </button>
           </div>
-        </aside>
 
-        <main className="flex-1 min-w-0">
-          {loading ? (
-            <LoadingSpinner />
-          ) : vehicles.length === 0 ? (
-            <div className="text-center py-20 text-gray-500">
-              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              {error ? (
-                <>
-                  <p className="text-xl text-red-500">Error loading vehicles</p>
-                  <p className="mt-2 text-sm">{error}</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-xl">No results found</p>
-                  <p className="mt-2">Try changing your search criteria</p>
-                </>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {vehicles.map((v) => (
-                  <VehicleCard key={v.id} vehicle={v} />
-                ))}
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar Filters - Desktop */}
+            <aside className="hidden lg:block w-64 flex-shrink-0">
+              <div className="sticky top-24 bg-dark-lighter rounded-xl border border-gray-800 p-6">
+                <h2 className="text-lg font-semibold text-white mb-4">Filters</h2>
+                <FilterSection />
               </div>
+            </aside>
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-10">
+            {/* Mobile Filters */}
+            {showMobileFilters && (
+              <div className="lg:hidden fixed inset-0 z-50 bg-dark-lighter p-6 overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-white">Filters</h2>
                   <button
-                    onClick={() => goToPage((filters.page || 1) - 1)}
-                    disabled={(filters.page || 1) <= 1}
-                    className="btn-outline text-sm px-4 py-2 disabled:opacity-30"
+                    onClick={() => setShowMobileFilters(false)}
+                    className="p-2 text-gray-400 hover:text-white"
                   >
-                    Previous
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => goToPage(p)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        (filters.page || 1) === p
-                          ? 'bg-blue text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => goToPage((filters.page || 1) + 1)}
-                    disabled={(filters.page || 1) >= totalPages}
-                    className="btn-outline text-sm px-4 py-2 disabled:opacity-30"
-                  >
-                    Next
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
+                <FilterSection />
+              </div>
+            )}
+
+            {/* Results */}
+            <div className="flex-1">
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <LoadingSpinner />
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className="text-red-500 mb-2">Error loading vehicles</p>
+                  <p className="text-gray-500 text-sm">{error}</p>
+                </div>
+              ) : vehicles.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-dark-lighter flex items-center justify-center">
+                    <Search className="w-10 h-10 text-gray-600" />
+                  </div>
+                  <p className="text-xl text-gray-400 mb-2">No results found</p>
+                  <p className="text-gray-500">Try changing your search criteria</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {vehicles.map((vehicle) => (
+                      <VehicleCard key={vehicle.id} vehicle={vehicle} />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-10">
+                      <button
+                        onClick={() => goToPage((filters.page || 1) - 1)}
+                        disabled={(filters.page || 1) <= 1}
+                        className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg hover:bg-dark-lighter disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Previous
+                      </button>
+
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          const page = i + 1
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => goToPage(page)}
+                              className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+                                filters.page === page
+                                  ? 'bg-primary text-white'
+                                  : 'text-gray-400 hover:bg-dark-lighter'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          )
+                        })}
+                        {totalPages > 5 && (
+                          <>
+                            <span className="text-gray-500 px-2">...</span>
+                            <button
+                              onClick={() => goToPage(totalPages)}
+                              className="w-10 h-10 rounded-lg text-gray-400 hover:bg-dark-lighter transition-colors"
+                            >
+                              {totalPages}
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => goToPage((filters.page || 1) + 1)}
+                        disabled={(filters.page || 1) >= totalPages}
+                        className="px-4 py-2 border border-gray-700 text-gray-300 rounded-lg hover:bg-dark-lighter disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
-            </>
-          )}
-        </main>
-      </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   )
 }
